@@ -1,3 +1,4 @@
+
 from ursina import *
 from ursina.prefabs.button import Button
 import chess
@@ -41,6 +42,7 @@ def centered_text(msg: str, col, duration: float = 1.5):
     return btn
 
 move_display = None
+undo_button = None
 
 
 def enable_board_input(state: bool):
@@ -52,7 +54,16 @@ def update_board():
         piece = board.piece_at(chess.parse_square(name))
         btn.text = UNICODE_PIECE[piece.symbol()] if piece else ''
 
-    move_display.text = board.peek().uci() if board.move_stack else ''
+    move_display.text = str(f"{board.peek().uci() if board.move_stack else ''}\n\n\n")
+
+
+def undo_move():
+    if not board.move_stack:
+        return
+    board.pop()
+    update_board()
+    clear_highlights()
+    clicked.clear()
 
 
 
@@ -140,7 +151,7 @@ def handle_click(square_name: str):
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
         if board.is_stalemate():
-           centered_text('Stalemate!', color.gold)
+            centered_text('Stalemate!', color.gold)
     except chess.IllegalMoveError:
         if needs_promotion(move):
             ask_promotion(move)
@@ -177,12 +188,13 @@ for x in range(8):
             collider='box',
             on_click=Func(handle_click, name),
         )
+
         btn.text_size = 4.5
         squares[name] = btn
 
 
 def layout_board():
-    global tile_len, move_display
+    global tile_len, move_display, undo_button
     aspect = window.aspect_ratio
     tile_len = 1 / 8
     if aspect < 1:
@@ -207,11 +219,28 @@ def layout_board():
             text='',
         )
 
+    if undo_button is None:
+        undo_button = Button(
+            parent=move_display,
+            text=" ",
+            texture="takeback",
+            color=color.white,
+            on_click=undo_move,
+            radius=0,
+        )
+    else:
+        undo_button.parent = move_display
+
     a8_pos = squares['a8'].position
     move_display.scale = (tile_len * .9, tile_len * .9)
     move_display.position = (a8_pos[0], a8_pos[1])
     move_display.origin = (0, 0)
     move_display.z = -0.1
+
+    undo_button.scale = move_display.scale*5
+    undo_button.position = (move_display.scale_x * 1.1, -1.5*tile_len)
+    undo_button.origin = (0, 0)
+    undo_button.z = -0.1
 
 
 
@@ -226,6 +255,11 @@ def update():
     if window.size != _prev:
         layout_board()
         _prev = window.size
+
+
+def input(key):
+    if key == 'u':
+        undo_move()
 
 
 app.run()
