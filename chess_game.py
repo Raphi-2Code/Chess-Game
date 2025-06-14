@@ -219,13 +219,15 @@ def layout_board():
 
     if undo_button is None:
         undo_button = Button(
-            parent=camera.ui,
+            parent=move_display,
             text='Undo',
             color=color.azure,
             text_color=color.black,
             on_click=undo_move,
             radius=0,
         )
+    else:
+        undo_button.parent = move_display
 
     a8_pos = squares['a8'].position
     move_display.scale = (tile_len * .9, tile_len * .9)
@@ -233,8 +235,8 @@ def layout_board():
     move_display.origin = (0, 0)
     move_display.z = -0.1
 
-    undo_button.scale = (tile_len * 2, tile_len * 0.8)
-    undo_button.position = (a8_pos[0] + tile_len * 1.5, a8_pos[1])
+    undo_button.scale = move_display.scale
+    undo_button.position = (move_display.scale_x * 1.1, 0)
     undo_button.origin = (0, 0)
     undo_button.z = -0.1
 
