@@ -13,15 +13,18 @@ UNICODE_PIECE = {
     'P': '♟', 'N': '♞', 'B': '♝', 'R': '♜', 'Q': '♛', 'K': '♚'
 }
 
+
 LIGHT, DARK = color.hex('F99850'), color.hex('774212')
+
 
 board = chess.Board()
 squares = {}
 clicked = []
 promo_gui = []
-tile_len = 0.125
-move_display = None
 highlighted = []
+tile_len = 0.125
+
+
 
 def centered_text(msg: str, col, duration: float = 1.5):
     btn = Button(
@@ -36,6 +39,10 @@ def centered_text(msg: str, col, duration: float = 1.5):
     )
     invoke(destroy, btn, delay=duration)
     return btn
+
+move_display = None
+
+
 def enable_board_input(state: bool):
     for btn in squares.values():
         btn.collider = 'box' if state else None
@@ -45,10 +52,9 @@ def update_board():
         piece = board.piece_at(chess.parse_square(name))
         btn.text = UNICODE_PIECE[piece.symbol()] if piece else ''
 
-    if board.move_stack:
-        move_display.text = board.peek().uci()
-    else:
-        move_display.text = ''
+    move_display.text = board.peek().uci() if board.move_stack else ''
+
+
 
 def ask_promotion(base_move: str):
     enable_board_input(False)
@@ -86,12 +92,15 @@ def ask_promotion(base_move: str):
         )
         promo_gui.append(b)
 
+
 def clear_highlights():
     global highlighted
     for sq in highlighted:
-        x, y = chess.square_file(chess.parse_square(sq)), chess.square_rank(chess.parse_square(sq))
+        x = chess.square_file(chess.parse_square(sq))
+        y = chess.square_rank(chess.parse_square(sq))
         squares[sq].color = LIGHT if (x + y) % 2 else DARK
     highlighted.clear()
+
 
 def show_legal_targets(from_sq: str):
     clear_highlights()
@@ -104,6 +113,7 @@ def show_legal_targets(from_sq: str):
             name = chess.square_name(move.to_square)
             squares[name].color = color.hex("#4D7E42")
             highlighted.append(name)
+
 
 def handle_click(square_name: str):
     if promo_gui:
@@ -119,6 +129,7 @@ def handle_click(square_name: str):
     clicked.append(square_name)
     move = ''.join(clicked)
     clear_highlights()
+
     try:
         board.push_uci(move)
         update_board()
@@ -126,7 +137,6 @@ def handle_click(square_name: str):
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
-
     except chess.IllegalMoveError:
         if needs_promotion(move):
             ask_promotion(move)
@@ -136,6 +146,7 @@ def handle_click(square_name: str):
         centered_text('Invalid Move!', color.red)
     finally:
         clicked.clear()
+
 
 def needs_promotion(base_move: str) -> bool:
     if len(base_move) != 4:
@@ -149,6 +160,8 @@ def needs_promotion(base_move: str) -> bool:
             return True
     return False
 
+
+
 for x in range(8):
     for y in range(8):
         name = chess.square_name(chess.square(x, y))
@@ -160,8 +173,9 @@ for x in range(8):
             collider='box',
             on_click=Func(handle_click, name),
         )
-        btn.text_size=4.5
+        btn.text_size = 4.5
         squares[name] = btn
+
 
 def layout_board():
     global tile_len, move_display
@@ -184,18 +198,30 @@ def layout_board():
             btn.z = 0
 
     if move_display is None:
-        move_display = Text('', parent=camera.ui, origin=(0, 0), scale=1.5)
-    move_display.position = (x0 + 0.5 * tile_len, y0 - 0.6 * tile_len)
+        move_display = Draggable(
+            parent=camera.ui,
+            text='',
+        )
+
+    a8_pos = squares['a8'].position
+    move_display.scale = (tile_len * .9, tile_len * .9)
+    move_display.position = (a8_pos[0], a8_pos[1])
+    move_display.origin = (0, 0)
+    move_display.z = -0.1
+
+
 
 layout_board()
 update_board()
 
 _prev = window.size
 
+
 def update():
     global _prev
     if window.size != _prev:
         layout_board()
         _prev = window.size
+
 
 app.run()
