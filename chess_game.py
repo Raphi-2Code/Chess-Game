@@ -41,6 +41,7 @@ def centered_text(msg: str, col, duration: float = 1.5):
     return btn
 
 move_display = None
+undo_button = None
 
 
 def enable_board_input(state: bool):
@@ -53,6 +54,15 @@ def update_board():
         btn.text = UNICODE_PIECE[piece.symbol()] if piece else ''
 
     move_display.text = board.peek().uci() if board.move_stack else ''
+
+
+def undo_move():
+    if not board.move_stack:
+        return
+    board.pop()
+    update_board()
+    clear_highlights()
+    clicked.clear()
 
 
 
@@ -76,6 +86,8 @@ def ask_promotion(base_move: str):
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
+        if board.is_stalemate():
+            centered_text('Stalemate!', color.gold)
 
     for i, (letter, glyph) in enumerate(pieces):
         b = Button(
@@ -137,6 +149,8 @@ def handle_click(square_name: str):
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
+        if board.is_stalemate():
+            centered_text('Stalemate!', color.gold)
     except chess.IllegalMoveError:
         if needs_promotion(move):
             ask_promotion(move)
@@ -178,7 +192,7 @@ for x in range(8):
 
 
 def layout_board():
-    global tile_len, move_display
+    global tile_len, move_display, undo_button
     aspect = window.aspect_ratio
     tile_len = 1 / 8
     if aspect < 1:
@@ -203,11 +217,26 @@ def layout_board():
             text='',
         )
 
+    if undo_button is None:
+        undo_button = Button(
+            parent=camera.ui,
+            text='Undo',
+            color=color.azure,
+            text_color=color.black,
+            on_click=undo_move,
+            radius=0,
+        )
+
     a8_pos = squares['a8'].position
     move_display.scale = (tile_len * .9, tile_len * .9)
     move_display.position = (a8_pos[0], a8_pos[1])
     move_display.origin = (0, 0)
     move_display.z = -0.1
+
+    undo_button.scale = (tile_len * 2, tile_len * 0.8)
+    undo_button.position = (a8_pos[0] + tile_len * 1.5, a8_pos[1])
+    undo_button.origin = (0, 0)
+    undo_button.z = -0.1
 
 
 
@@ -222,6 +251,11 @@ def update():
     if window.size != _prev:
         layout_board()
         _prev = window.size
+
+
+def input(key):
+    if key == 'u':
+        undo_move()
 
 
 app.run()
