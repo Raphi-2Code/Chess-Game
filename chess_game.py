@@ -72,7 +72,7 @@ def ask_promotion(base_move: str):
 
         board.push_uci(base_move + letter)
         update_board()
-        if board.is_check():
+        if board.is_check() and not board.is_checkmate():
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
@@ -133,7 +133,7 @@ def handle_click(square_name: str):
     try:
         board.push_uci(move)
         update_board()
-        if board.is_check():
+        if board.is_check() and not board.is_checkmate():
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
