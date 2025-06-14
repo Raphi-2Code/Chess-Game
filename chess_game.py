@@ -76,6 +76,8 @@ def ask_promotion(base_move: str):
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
+        if board.is_stalemate():
+            centered_text('Stalemate!', color.gold)
 
     for i, (letter, glyph) in enumerate(pieces):
         b = Button(
@@ -137,6 +139,8 @@ def handle_click(square_name: str):
             centered_text('Check!', color.red)
         if board.is_checkmate():
             centered_text('Checkmate!', color.gold)
+        if board.is_stalemate():
+           centered_text('Stalemate!', color.gold)
     except chess.IllegalMoveError:
         if needs_promotion(move):
             ask_promotion(move)
