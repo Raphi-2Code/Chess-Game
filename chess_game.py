@@ -1,9 +1,7 @@
-
-from ursina import *
-from ursina.prefabs.button import Button
+from ursina.prefabs.splash_screen import *
 import chess
-
 app = Ursina(borderless=False)
+UrsinaSplashScreen()
 window.title = 'Ursina Chess'
 camera.orthographic = True
 camera.fov = 1
