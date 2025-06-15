@@ -64,7 +64,7 @@ def rebuild_history_menu():
         tmp.push(mv)
 
     if not labels:
-        labels = ['(leer)']
+        labels = ['(empty)']
 
     buttons = [DropdownMenuButton(lbl) for lbl in labels]
     #position = (window.left + 0.02, window.top - 0.05)
