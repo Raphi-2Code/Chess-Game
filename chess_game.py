@@ -1,5 +1,7 @@
 from ursina.prefabs.splash_screen import *
+from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 import chess
+
 app = Ursina(borderless=False)
 UrsinaSplashScreen()
 window.title = 'Ursina Chess'
@@ -12,9 +14,7 @@ UNICODE_PIECE = {
     'P': '♟', 'N': '♞', 'B': '♝', 'R': '♜', 'Q': '♛', 'K': '♚'
 }
 
-
 LIGHT, DARK = color.hex('F99850'), color.hex('774212')
-
 
 board = chess.Board()
 squares = {}
@@ -22,7 +22,9 @@ clicked = []
 promo_gui = []
 highlighted = []
 tile_len = 0.125
-
+move_display = None
+undo_button = None
+history_menu = None
 
 
 def centered_text(msg: str, col, duration: float = 1.5):
@@ -39,13 +41,42 @@ def centered_text(msg: str, col, duration: float = 1.5):
     invoke(destroy, btn, delay=duration)
     return btn
 
-move_display = None
-undo_button = None
-
 
 def enable_board_input(state: bool):
     for btn in squares.values():
         btn.collider = 'box' if state else None
+
+
+def rebuild_history_menu():
+    global history_menu
+    if history_menu:
+        destroy(history_menu)
+
+    tmp = chess.Board()
+    labels = []
+    for mv in board.move_stack:
+        turn="⏹"
+        if tmp.turn==True:
+            turn="⏹"
+        if tmp.turn==False:
+            turn="□"
+        labels.append(turn + str("   ") + tmp.san(mv))
+        tmp.push(mv)
+
+    if not labels:
+        labels = ['(leer)']
+
+    buttons = [DropdownMenuButton(lbl) for lbl in labels]
+    #position = (window.left + 0.02, window.top - 0.05)
+    history_menu = DropdownMenu(
+        'History',
+        buttons=buttons,
+        parent=camera.ui,
+        scale=(.25, .025),
+        origin=(-.5, .5),
+        z=-.2
+    )
+
 
 def update_board():
     for name, btn in squares.items():
@@ -53,6 +84,8 @@ def update_board():
         btn.text = UNICODE_PIECE[piece.symbol()] if piece else ''
 
     move_display.text = str(f"{board.peek().uci() if board.move_stack else ''}\n\n\n")
+
+    rebuild_history_menu()
 
 
 def undo_move():
@@ -62,7 +95,7 @@ def undo_move():
     update_board()
     clear_highlights()
     clicked.clear()
-
+    rebuild_history_menu()
 
 
 def ask_promotion(base_move: str):
@@ -186,7 +219,6 @@ for x in range(8):
             collider='box',
             on_click=Func(handle_click, name),
         )
-
         btn.text_size = 4.5
         squares[name] = btn
 
@@ -212,10 +244,7 @@ def layout_board():
             btn.z = 0
 
     if move_display is None:
-        move_display = Draggable(
-            parent=camera.ui,
-            text='',
-        )
+        move_display = Draggable(parent=camera.ui, text='')
 
     if undo_button is None:
         undo_button = Button(
@@ -240,10 +269,9 @@ def layout_board():
     undo_button.origin = (0, 0)
     undo_button.z = -0.1
 
-
-
 layout_board()
 update_board()
+rebuild_history_menu()
 
 _prev = window.size
 
@@ -258,6 +286,5 @@ def update():
 def input(key):
     if key == 'u':
         undo_move()
-
 
 app.run()
