@@ -1,3 +1,5 @@
+Added history
+![image](https://github.com/user-attachments/assets/5b64bd7f-ea31-4bf7-842b-1d69a87526cf)
 Forgot to add screenshot xD
 ![image](https://github.com/user-attachments/assets/d4c13edd-6c63-462d-980c-a2dde011ae72)
 Little Update:
